@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vigenère Cipher</title>
+    <style>
+        :root {
+          --primary-color: #4a6fa5;
+          --primary-dark: #3a5a8c;
+          --secondary-color: #6c757d;
+          --light-color: #f8f9fa;
+          --dark-color: #343a40;
+          --success-color: #28a745;
+          --danger-color: #dc3545;
+          --warning-color: #ffc107;
+          --info-color: #17a2b8;
+          --border-radius: 8px;
+          --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          --transition: all 0.3s ease;
+        }
+        
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+        
+        body {
+          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+          line-height: 1.6;
+          color: var(--dark-color);
+          background-color: #f0f4f8;
+          padding: 20px;
+        }
+        
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        
+        header {
+          text-align: center;
+          margin-bottom: 2rem;
+          padding: 1rem;
+          background-color: white;
+          border-radius: var(--border-radius);
+          box-shadow: var(--box-shadow);
+        }
+        
+        header h1 {
+          color: var(--primary-color);
+          margin-bottom: 0.5rem;
+        }
+        
+        main {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+        
+        @media (min-width: 768px) {
+          main {
+            grid-template-columns: 1fr 1fr;
+          }
+        }
+        
+        .card,
+        .info-card {
+          background-color: white;
+          border-radius: var(--border-radius);
+          box-shadow: var(--box-shadow);
+          padding: 2rem;
+        }
+        
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+        
+        label {
+          display: block;
+          margin-bottom: 0.5rem;
+          font-weight: 600;
+        }
+        
+        input[type="text"],
+        textarea {
+          width: 100%;
+          padding: 0.75rem;
+          border: 1px solid #ddd;
+          border-radius: var(--border-radius);
+          font-size: 1rem;
+          transition: var(--transition);
+        }
+        
+        input[type="text"]:focus,
+        textarea:focus {
+          outline: none;
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+        
+        textarea {
+          min-height: 150px;
+          resize: vertical;
+        }
+        
+        .radio-group {
+          display: flex;
+          gap: 1.5rem;
+        }
+        
+        .radio {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+        }
+        
+        .radio input {
+          margin-right: 0.5rem;
+        }
+        
+        .btn {
+          display: inline-block;
+          background-color: var(--primary-color);
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          font-size: 1rem;
+          border-radius: var(--border-radius);
+          cursor: pointer;
+          transition: var(--transition);
+        }
+        
+        .btn:hover {
+          background-color: var(--primary-dark);
+        }
+        
+        .key-strength {
+          margin-top: 0.5rem;
+        }
+        
+        .strength-bar {
+          height: 8px;
+          background-color: #e9ecef;
+          border-radius: 4px;
+          overflow: hidden;
+          margin-bottom: 0.25rem;
+        }
+        
+        .strength-fill {
+          height: 100%;
+          width: 0;
+          background-color: var(--danger-color);
+          transition: var(--transition);
+        }
+        
+        #strengthText {
+          font-size: 0.8rem;
+          color: var(--secondary-color);
+        }
+        
+        .result {
+          margin-top: 2rem;
+          padding: 1.5rem;
+          background-color: #f8f9fa;
+          border-radius: var(--border-radius);
+          border-left: 4px solid var(--primary-color);
+          display: none;
+        }
+        
+        .result.error {
+          border-left-color: var(--danger-color);
+          color: var(--danger-color);
+        }
+        
+        .result h3 {
+          margin-bottom: 1rem;
+          color: var(--primary-color);
+        }
+        
+        .result-text {
+          background-color: white;
+          padding: 1rem;
+          border-radius: var(--border-radius);
+          border: 1px solid #ddd;
+          margin-bottom: 1rem;
+          word-break: break-all;
+        }
+        
+        .copy-btn {
+          background-color: var(--secondary-color);
+        }
+        
+        .copy-btn:hover {
+          background-color: #5a6268;
+        }
+        
+        .info-card h2,
+        .info-card h3 {
+          color: var(--primary-color);
+          margin-bottom: 1rem;
+        }
+        
+        .info-card p,
+        .info-card ol {
+          margin-bottom: 1.5rem;
+        }
+        
+        .info-card ol {
+          padding-left: 1.5rem;
+        }
+        
+        .cipher-table {
+          border: 1px solid #ddd;
+          border-radius: var(--border-radius);
+          overflow: hidden;
+        }
+        
+        .table-row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          text-align: center;
+        }
+        
+        .table-row.header {
+          background-color: var(--primary-color);
+          color: white;
+          font-weight: 600;
+        }
+        
+        .table-row div {
+          padding: 0.75rem;
+          border-right: 1px solid #ddd;
+          border-bottom: 1px solid #ddd;
+        }
+        
+        .table-row div:last-child {
+          border-right: none;
+        }
+        
+        .table-row:last-child div {
+          border-bottom: none;
+        }
+        
+        footer {
+          text-align: center;
+          margin-top: 3rem;
+          padding: 1rem;
+          color: var(--secondary-color);
+        }
+        
+        @media (max-width: 576px) {
+          .radio-group {
+            flex-direction: column;
+            gap: 0.5rem;
+          }
+        
+          .table-row {
+            font-size: 0.9rem;
+          }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Vigenère Cipher</h1>
+            <p>Encrypt and decrypt messages using the Vigenère cipher</p>
+        </header>
+
+        <main>
+            <div class="card">
+                <form id="cipherForm">
+                    <div class="form-group">
+                        <label for="action">Choose Action:</label>
+                        <div class="radio-group">
+                            <label class="radio">
+                                <input type="radio" name="action" value="encrypt" checked> Encrypt
+                            </label>
+                            <label class="radio">
+                                <input type="radio" name="action" value="decrypt"> Decrypt
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="key">Key:</label>
+                        <input type="text" id="key" name="key" placeholder="Enter your key" required>
+                        <div class="key-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <span id="strengthText">Key strength</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message:</label>
+                        <textarea id="message" name="message" placeholder="Enter your message" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn">Process</button>
+                </form>
+
+                <div class="result" id="result">
+                    <h3 id="resultTitle">Encrypted Message:</h3>
+                    <div class="result-text" id="resultText"></div>
+                    <button class="btn copy-btn" onclick="copyToClipboard()">Copy to Clipboard</button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h2>About Vigenère Cipher</h2>
+                <p>The Vigenère cipher is a method of encrypting alphabetic text by using a simple form of polyalphabetic substitution. It employs a keyword to determine the shift of each letter in the plaintext.</p>
+                
+                <h3>How it works:</h3>
+                <ol>
+                    <li>Each letter of the key is used to encrypt one letter of the plaintext.</li>
+                    <li>If the key is shorter than the plaintext, it is repeated.</li>
+                    <li>Each letter in the key specifies how many positions to shift the corresponding plaintext letter.</li>
+                </ol>
+                
+                <h3>Example:</h3>
+                <p>Plaintext: <strong>HELLO</strong><br>
+                Key: <strong>KEY</strong> (repeated as <strong>KEYKE</strong>)<br>
+                Ciphertext: <strong>RIJVS</strong></p>
+                
+                <div class="cipher-table">
+                    <div class="table-row header">
+                        <div>Plaintext</div>
+                        <div>Key</div>
+                        <div>Shift</div>
+                        <div>Ciphertext</div>
+                    </div>
+                    <div class="table-row">
+                        <div>H</div>
+                        <div>K</div>
+                        <div>10</div>
+                        <div>R</div>
+                    </div>
+                    <div class="table-row">
+                        <div>E</div>
+                        <div>E</div>
+                        <div>4</div>
+                        <div>I</div>
+                    </div>
+                    <div class="table-row">
+                        <div>L</div>
+                        <div>Y</div>
+                        <div>24</div>
+                        <div>J</div>
+                    </div>
+                    <div class="table-row">
+                        <div>L</div>
+                        <div>K</div>
+                        <div>10</div>
+                        <div>V</div>
+                    </div>
+                    <div class="table-row">
+                        <div>O</div>
+                        <div>E</div>
+                        <div>4</div>
+                        <div>S</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Vigenère Cipher Tool</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const keyInput = document.getElementById("key");
+            const strengthFill = document.getElementById("strengthFill");
+            const strengthText = document.getElementById("strengthText");
+            const form = document.getElementById("cipherForm");
+            const resultDiv = document.getElementById("result");
+            const resultTitle = document.getElementById("resultTitle");
+            const resultText = document.getElementById("resultText");
+
+            // Update key strength indicator when key changes
+            keyInput.addEventListener("input", updateKeyStrength);
+
+            function updateKeyStrength() {
+                const key = keyInput.value;
+                let strength = 0;
+                let message = "";
+
+                if (key.length === 0) {
+                    message = "Key strength";
+                } else if (key.length < 4) {
+                    strength = 25;
+                    message = "Weak";
+                } else if (key.length < 8) {
+                    strength = 50;
+                    message = "Moderate";
+                } else if (key.length < 12) {
+                    strength = 75;
+                    message = "Strong";
+                } else {
+                    strength = 100;
+                    message = "Very Strong";
+                }
+
+                // Additional checks for key complexity
+                if (key.length > 0) {
+                    const hasUppercase = /[A-Z]/.test(key);
+                    const hasLowercase = /[a-z]/.test(key);
+                    const hasNumbers = /[0-9]/.test(key);
+                    const hasSpecialChars = /[^A-Za-z0-9]/.test(key);
+
+                    // Adjust strength based on complexity
+                    if (hasUppercase && hasLowercase && (hasNumbers || hasSpecialChars) && key.length >= 8) {
+                        strength = 100;
+                        message = "Very Strong";
+                    } else if ((hasUppercase || hasLowercase) && (hasNumbers || hasSpecialChars) && key.length >= 6) {
+                        strength = Math.max(strength, 75);
+                        message = "Strong";
+                    }
+                }
+
+                // Update the UI
+                strengthFill.style.width = `${strength}%`;
+
+                // Change color based on strength
+                if (strength <= 25) {
+                    strengthFill.style.backgroundColor = "var(--danger-color)";
+                } else if (strength <= 50) {
+                    strengthFill.style.backgroundColor = "var(--warning-color)";
+                } else if (strength <= 75) {
+                    strengthFill.style.backgroundColor = "var(--info-color)";
+                } else {
+                    strengthFill.style.backgroundColor = "var(--success-color)";
+                }
+
+                strengthText.textContent = message;
+            }
+
+            // Initialize key strength on page load
+            updateKeyStrength();
+
+            // Form submission
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                
+                const key = keyInput.value;
+                const message = document.getElementById("message").value;
+                const action = document.querySelector('input[name="action"]:checked').value;
+
+                if (!key || !message) {
+                    alert("Please provide both a key and a message.");
+                    return;
+                }
+
+                let result;
+                if (action === "encrypt") {
+                    result = vigenereEncrypt(message, key);
+                    resultTitle.textContent = "Encrypted Message:";
+                } else {
+                    result = vigenereDecrypt(message, key);
+                    resultTitle.textContent = "Decrypted Message:";
+                }
+
+                resultText.textContent = result;
+                resultDiv.style.display = "block";
+            });
+
+            // Vigenere Cipher Functions
+            function vigenereEncrypt(plaintext, key) {
+                key = key.toUpperCase().replace(/[^A-Z]/g, "");
+                if (key.length === 0) return "Invalid key";
+                
+                let result = "";
+                let keyLength = key.length;
+                let keyIndex = 0;
+                
+                for (let i = 0; i < plaintext.length; i++) {
+                    let char = plaintext[i];
+                    
+                    // Only encrypt alphabetic characters
+                    if (/[A-Za-z]/.test(char)) {
+                        let isUpper = char === char.toUpperCase();
+                        let charCode = char.toUpperCase().charCodeAt(0) - 65;
+                        let keyChar = key.charCodeAt(keyIndex % keyLength) - 65;
+                        
+                        let encryptedChar = String.fromCharCode(((charCode + keyChar) % 26) + 65);
+                        
+                        // Preserve original case
+                        if (!isUpper) {
+                            encryptedChar = encryptedChar.toLowerCase();
+                        }
+                        
+                        result += encryptedChar;
+                        keyIndex++;
+                    } else {
+                        // Non-alphabetic characters remain unchanged
+                        result += char;
+                    }
+                }
+                
+                return result;
+            }
+
+            function vigenereDecrypt(ciphertext, key) {
+                key = key.toUpperCase().replace(/[^A-Z]/g, "");
+                if (key.length === 0) return "Invalid key";
+                
+                let result = "";
+                let keyLength = key.length;
+                let keyIndex = 0;
+                
+                for (let i = 0; i < ciphertext.length; i++) {
+                    let char = ciphertext[i];
+                    
+                    // Only decrypt alphabetic characters
+                    if (/[A-Za-z]/.test(char)) {
+                        let isUpper = char === char.toUpperCase();
+                        let charCode = char.toUpperCase().charCodeAt(0) - 65;
+                        let keyChar = key.charCodeAt(keyIndex % keyLength) - 65;
+                        
+                        // For decryption, subtract key and handle negative values
+                        let decryptedChar = String.fromCharCode((((charCode - keyChar) % 26 + 26) % 26) + 65);
+                        
+                        // Preserve original case
+                        if (!isUpper) {
+                            decryptedChar = decryptedChar.toLowerCase();
+                        }
+                        
+                        result += decryptedChar;
+                        keyIndex++;
+                    } else {
+                        // Non-alphabetic characters remain unchanged
+                        result += char;
+                    }
+                }
+                
+                return result;
+            }
+        });
+
+        // Function to copy result to clipboard
+        function copyToClipboard() {
+            const resultText = document.getElementById("resultText");
+
+            if (resultText) {
+                // Create a temporary textarea element
+                const textarea = document.createElement("textarea");
+                textarea.value = resultText.textContent;
+                document.body.appendChild(textarea);
+
+                // Select and copy the text
+                textarea.select();
+                document.execCommand("copy");
+
+                // Remove the temporary element
+                document.body.removeChild(textarea);
+
+                // Provide feedback
+                alert("Copied to clipboard!");
+            }
+        }
+    </script>
+</body>
+</html>
